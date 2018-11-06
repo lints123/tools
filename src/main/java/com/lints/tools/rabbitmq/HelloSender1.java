@@ -16,6 +16,7 @@ public class HelloSender1 {
         for(int i =0;i<10;i++) {
             String sendMsg = "hello1 " + new Date();
             System.out.println("Sender1 : " + sendMsg+"____"+i);
+            // 发送消息到队列中，使用默认路由器，指明队列名称
             this.rabbitTemplate.convertAndSend("helloQueue", sendMsg);
         }
     }
