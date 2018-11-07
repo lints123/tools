@@ -8,6 +8,9 @@ import java.util.Date;
 
 /**
  * 单个生产者消费者
+ * 1、第一种方案：
+ * 在启动类中，创建队列和路由器
+ * 使用rabbitTemplate中，创建生产者和消费者。
  */
 
 @Component
