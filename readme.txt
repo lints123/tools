@@ -9,7 +9,24 @@
 
 2018-11-07
 rabbitmq：配置文件
-https://blog.csdn.net/qq_38455201/article/details/80308771
+【遇到的问题：】
+单个生产者单个消费者的问题
+没有使用Bean注入，导致发送消息时，队列没有与路由绑定，回调的时候一直提示消费成功，但是消费者并没有获取到数据，后查发现是少写了 Bean注解
+加上，生产者和消费者正常
+@Bean
+public Binding bindingA(){
+    // 主要的意思是：在配置时更加快速的创建绑定关系。实例化Binding语法：
+    return BindingBuilder.bind(queueA()).to(defaultExchange()).with(RabbitConfig.ROUTINGKEY_A);
+}
+类：MsgProducer和类MsgReceiver定义的是单个生产者单个消费者的关系
+
+定义单个生产者多个消费者
+使用DirectExchange，按照指定的Routing Key指定队列
+使用的类：
+RabbitConfig.quereB() 创建队列、defaultExchangeB() 创建指定路由 、bindingB() 绑定队列与路由之间的关系，根据Routing Key
+MsgProducer.sendMsgTo(); 作为生产者
+MsgRecevier_one.process(); 作为消费者1
+MsgRecevier_two.process(); 作为消费者2
 
 
 

@@ -64,7 +64,7 @@ public class RabbitConfig {
         // 指定RabbitMQ服务器的虚拟主机
         connectionFactory.setVirtualHost("/");
         // 设置为true，才能进行消息的回调。
-        /*connectionFactory.setPublisherConfirms(true);*/
+        connectionFactory.setPublisherConfirms(true);
         return connectionFactory;
     }
 
@@ -94,6 +94,10 @@ public class RabbitConfig {
     public DirectExchange defaultExchange(){
         return new DirectExchange(EXCHANGE_A);
     }
+    @Bean
+    public DirectExchange defaultExchangeB(){
+        return new DirectExchange(EXCHANGE_B);
+    }
 
     /**
      * 创建队列
@@ -114,14 +118,15 @@ public class RabbitConfig {
      * 队列与交换器的绑定关系便是由Binding来表示的
      * @return
      */
-    public Binding binding(){
+    @Bean
+    public Binding bindingA(){
         // 主要的意思是：在配置时更加快速的创建绑定关系。实例化Binding语法：
         return BindingBuilder.bind(queueA()).to(defaultExchange()).with(RabbitConfig.ROUTINGKEY_A);
     }
     // 一个交换机可以绑定多个消息队列，也就是消息通过一个交换机，可以分发到不同的队列当中去。
     @Bean
     public Binding bindingB(){
-        return BindingBuilder.bind(queueB()).to(defaultExchange()).with(RabbitConfig.ROUTINGKEY_B);
+        return BindingBuilder.bind(queueB()).to(defaultExchangeB()).with(RabbitConfig.ROUTINGKEY_B);
     }
 
 
