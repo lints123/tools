@@ -28,6 +28,10 @@ MsgProducer.sendMsgTo(); 作为生产者
 MsgRecevier_one.process(); 作为消费者1
 MsgRecevier_two.process(); 作为消费者2
 
+参考网站：
+https://blog.csdn.net/qq_38455201/article/details/80308771 Spring Boot整合RabbitMQ详细教程
+
+
 
 
 
