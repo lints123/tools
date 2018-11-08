@@ -20,9 +20,8 @@ public class MsgRecevier_one {
 
     @RabbitHandler
     public void process(String content){
-
         logger.info("消费者One >>> 接收消息队列里面的消息："+content);
-
     }
+
 
 }

@@ -1,19 +1,20 @@
 package com.lints.tools.rabbitmq_config;
 
+import com.rabbitmq.client.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.amqp.core.Binding;
-import org.springframework.amqp.core.BindingBuilder;
-import org.springframework.amqp.core.DirectExchange;
-import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
+import org.springframework.amqp.rabbit.listener.api.ChannelAwareMessageListener;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
+import org.springframework.messaging.converter.SimpleMessageConverter;
 
 
 /**
@@ -98,6 +99,8 @@ public class RabbitConfig {
     public DirectExchange defaultExchangeB(){
         return new DirectExchange(EXCHANGE_B);
     }
+    @Bean
+    public DirectExchange defaultExchangeC(){return new DirectExchange(EXCHANGE_C);}
 
     /**
      * 创建队列
@@ -114,6 +117,11 @@ public class RabbitConfig {
         return new Queue(QUEUE_B,true);
     }
 
+    @Bean
+    public Queue queueC(){
+        return new Queue(QUEUE_C,true);
+    }
+
     /**
      * 队列与交换器的绑定关系便是由Binding来表示的
      * @return
@@ -127,6 +135,57 @@ public class RabbitConfig {
     @Bean
     public Binding bindingB(){
         return BindingBuilder.bind(queueB()).to(defaultExchangeB()).with(RabbitConfig.ROUTINGKEY_B);
+    }
+
+    @Bean
+    public Binding bindingC(){
+        return BindingBuilder.bind(queueC()).to(defaultExchangeC()).with(RabbitConfig.ROUTINGKEY_C);
+    }
+
+    // 监听发送到队列名称为QUEUE_C的消息
+    // 定义一个Bean，消费指定队列里面的消息
+    @Bean
+    public SimpleMessageListenerContainer messageListenerContainer(){
+        // 定义一个简单的消息监听者 容器
+        SimpleMessageListenerContainer container = new SimpleMessageListenerContainer(connectionFactory());
+
+
+        // 指定监听队列
+        container.setQueueNames(QUEUE_C);
+        // 假如想一个消费者处理多个队列里面的信息可以如下设置：
+        // container.setQueues(queueA(),queueB(),queueC());
+
+        container.setExposeListenerChannel(true);
+
+        // 设置最大并发的消费者的数量
+        container.setMaxConcurrentConsumers(10);
+        // 设置最小并发的消费者的数量
+        container.setConcurrentConsumers(1);
+        // 设置确认模式 手工确认
+
+        // 手动确认一般是用来保持事物一致性，在确认客户端将消息消费后，程序回执给rabbitmq server端。server端将消息从server队列中删除。
+        // 也就是不管你是否设置自动确认，消息一旦发出，都会到达client端
+        container.setAcknowledgeMode(AcknowledgeMode.MANUAL);
+
+        // 定义消息监听机制
+        container.setMessageListener(new ChannelAwareMessageListener() {
+            @Override
+            public void onMessage(Message message, Channel channel) throws Exception {
+                /* 通过basic.qos方法设置prefetch_count=1，这样RabbitMQ就会使得每个Consumer在同一个时间点最多处理一个Message，
+                 * 换句话说,在接收到该Consumer的ack前,它不会将新的Message分发给它
+                 * */
+                channel.basicQos(1);
+                // 获取返回的结果集合
+                byte[] body = message.getBody();
+                logger.info("接收处理队列中A当中的消息：" + new String(body));
+                /*
+                 * 为了保证永远不会丢失消息，RabbitMQ支持消息应答机制。
+                 * 当消费者接收到消息并完成任务后会往RabbitMQ服务器发送一条确认的命令，然后RabbitMQ才会将消息删除。
+                 */
+                channel.basicAck(message.getMessageProperties().getDeliveryTag(),false);
+            }
+        });
+        return container;
     }
 
 

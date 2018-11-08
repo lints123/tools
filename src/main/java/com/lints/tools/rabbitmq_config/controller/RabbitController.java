@@ -34,4 +34,12 @@ public class RabbitController {
             msgProducer.sendMsgTo("这是我发送的第"+i+"个消息");
         }
     }
+
+    @PostMapping("/sendMsgConfig")
+    public void sendMsgConfig(){
+        logger.info("Controller >>> 调用生产者发送消息");
+        for (int i = 0;i<10;i++){
+            msgProducer.sendMsgConfig("发送消息，由配置文件中定义的一个监听类消费，当前消息为：>>>>" +i);
+        }
+    }
 }

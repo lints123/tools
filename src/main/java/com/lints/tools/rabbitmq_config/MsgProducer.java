@@ -47,6 +47,11 @@ public class MsgProducer implements RabbitTemplate.ConfirmCallback {
         rabbitTemplate.convertAndSend(RabbitConfig.EXCHANGE_B,RabbitConfig.ROUTINGKEY_B,content);
     }
 
+    // 定义一个生产者多个消费者
+    public void sendMsgConfig(String content){
+        rabbitTemplate.convertAndSend(RabbitConfig.EXCHANGE_C,RabbitConfig.ROUTINGKEY_C,content);
+    }
+
 
     // 接收回调
     @Override
